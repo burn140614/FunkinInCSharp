@@ -50,37 +50,43 @@ public sealed class InitState : FlxState
                 break;
 
             case 1:
-                _status.Text = "Loading mods...";
-                Mods.Instance.ScanMods(FunkinPaths.Instance.ModsRoot, SaveManager.Instance.Data.EnabledModDirs);
-                break;
-
-            case 2:
                 _status.Text = "Loading save data...";
                 SaveManager.Instance.Initialize(FunkinPaths.Instance.SaveRoot);
                 break;
 
+            case 2:
+                _status.Text = "Loading mods...";
+                // Mods are loaded after the save so the player's enabled-mod list can be honoured.
+                Mods.Instance.ScanMods(FunkinPaths.Instance.ModsRoot, SaveManager.Instance.Data.EnabledModDirs);
+                break;
+
             case 3:
+                _status.Text = "Applying settings...";
+                ApplySettings();
+                break;
+
+            case 4:
                 _status.Text = "Loading characters...";
                 CharacterRegistry.Instance.LoadAll();
                 break;
 
-            case 4:
+            case 5:
                 _status.Text = "Loading stages...";
                 StageRegistry.Instance.LoadAll();
                 break;
 
-            case 5:
+            case 6:
                 _status.Text = "Loading note kinds...";
                 Play.Notes.NoteKindManager.Instance.LoadAll();
                 break;
 
-            case 6:
+            case 7:
                 _status.Text = "Loading albums and weeks...";
                 AlbumRegistry.Instance.LoadAll();
                 LevelRegistry.Instance.LoadAll();
                 break;
 
-            case 7:
+            case 8:
                 _status.Text = "Loading songs...";
                 SongRegistry.Instance.LoadAll();
                 break;
@@ -102,6 +108,25 @@ public sealed class InitState : FlxState
 
                 break;
         }
+    }
+
+    /// <summary>Pushes the persisted options into the runtime systems.</summary>
+    private static void ApplySettings()
+    {
+        var save = SaveManager.Instance.Data;
+
+        FlxG.Sound.MusicVolume = (float)save.Volume;
+        FlxG.Sound.SfxVolume = (float)save.Volume;
+        FlxG.Sound.Muted = save.Mute;
+
+        int framerate = Math.Clamp(save.Options.Framerate, 30, 360);
+        if (FlxG.Game is Microsoft.Xna.Framework.Game game)
+        {
+            game.TargetElapsedTime = TimeSpan.FromSeconds(1.0 / framerate);
+            game.Window.Title = $"{Constants.TITLE} v{Constants.VERSION}";
+        }
+
+        Logger.Info($"Applied settings: volume {save.Volume:0.00}, framerate {framerate}, mute {save.Mute}.");
     }
 
     /// <summary>

@@ -22,6 +22,35 @@ public static class CommandLine
     /// <summary>True when running an automated playthrough.</summary>
     public static bool IsSmokeTest => SmokeSong is not null;
 
+    /// <summary>Prints usage information and exits when `--help`/`--version` is passed.</summary>
+    public static void HandleInformationalSwitches(string[] args)
+    {
+        if (args.Contains("--help") || args.Contains("-h"))
+        {
+            Console.WriteLine($"""
+                {Constants.TITLE} v{Constants.VERSION} - C# port (MonoGame)
+
+                Usage: Funkin [options]
+
+                Options:
+                  --root=<folder>          Game root containing the assets/ folder.
+                  --smoke-song=<songId>    Boot straight into a song with Botplay enabled.
+                  --smoke-difficulty=<d>   Difficulty for the automated playthrough.
+                  --smoke-timeout=<secs>   Abort the automated playthrough after N seconds.
+                  --verbose                Enable debug logging.
+                  --help, -h               Show this message.
+                  --version                Print the version and exit.
+                """);
+            Environment.Exit(0);
+        }
+
+        if (args.Contains("--version"))
+        {
+            Console.WriteLine($"{Constants.TITLE} v{Constants.VERSION} (C# port, MonoGame)");
+            Environment.Exit(0);
+        }
+    }
+
     public static void Parse(string[] args)
     {
         foreach (var arg in args)

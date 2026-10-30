@@ -479,12 +479,12 @@ public sealed class PlayState : FlxState
         if (isPlayer)
         {
             if (lane < _playerStrums.Count) _playerStrums[lane].ShowConfirm();
-            _stage.Boyfriend?.Sing(lane, args.Note.Data.Kind == "alt-animation");
+            _stage.Boyfriend?.Sing(lane, UsesAltAnimation(args.Note));
         }
         else
         {
             if (lane < _opponentStrums.Count) _opponentStrums[lane].ShowConfirm();
-            _stage.Dad?.Sing(lane, args.Note.Data.Kind == "alt-animation");
+            _stage.Dad?.Sing(lane, UsesAltAnimation(args.Note));
         }
 
         if (_noteLookup.TryGetValue(args.Note, out var sprite))
@@ -643,6 +643,14 @@ public sealed class PlayState : FlxState
     }
 
     private bool session_downscroll() => _session.Options.Downscroll;
+
+    /// <summary>True when the note's kind asks for the character's `-alt` sing animation.</summary>
+    private static bool UsesAltAnimation(PlayNote note)
+    {
+        if (note.Data.Kind is null) return false;
+        var kind = Play.Notes.NoteKindManager.Instance.GetNoteKind(note.Data.Kind);
+        return kind?.AnimationSuffix is not null || note.Data.Kind == Play.Notes.NoteKindManager.AltAnimationKind;
+    }
 
     private void FocusCamera(string role, bool instant = false)
     {

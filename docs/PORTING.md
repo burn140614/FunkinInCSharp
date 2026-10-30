@@ -134,3 +134,15 @@ missing spritesheets become coloured placeholders instead of crashes.
 - **Asset resolution** checks the most recently loaded mod first, then the base game, matching
   Polymod's override order. Textures/atlases are cached in `TextureCache`.
 - **Save file** lives in `<game root>/saves/funkin-save.json` with a `.tmp` write and a backup copy.
+
+## Changelog of the port
+
+### 0.10.1
+- Saved settings are applied at boot: master volume, mute, target framerate and window title.
+- Mods are loaded after the save file so the player's enabled-mod list is honoured.
+- Note kinds drive the character's `-alt` sing animation through `animationSuffix`.
+- Health icons react to who is winning (player icon highlighted above 50% health).
+- `--help` / `--version` command-line switches.
+
+### 0.10.0
+- First prerelease: core logic, MonoGame front-end, menus, gameplay, results and headless smoke test.

@@ -79,6 +79,12 @@ public sealed class HealthBar : FlxState
         float ratio = MathUtil.Clamp(health / Constants.HEALTH_MAX, 0f, 1f);
         float width = BarWidth * BarScale;
 
+        // The player's icon grows while they are winning, the opponent's while they are losing,
+        // mirroring the original's icon swapping behaviour.
+        bool playerWinning = ratio > 0.5f;
+        _iconPlayer.Alpha = playerWinning ? 1f : 0.55f;
+        _iconOpponent.Alpha = playerWinning ? 0.55f : 1f;
+
         _right.Scale = new Vector2(Math.Max(0.0001f, ratio) * BarScale, BarScale);
         _right.Position = new Vector2(_left.Position.X + width * (1 - ratio), _left.Position.Y);
     }
