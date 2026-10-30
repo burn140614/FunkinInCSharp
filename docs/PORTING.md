@@ -46,6 +46,7 @@ Legend: ✅ ported · 🟡 partial / simplified · ❌ not ported yet
 | `play/cutscene/dialogue/Conversation.hx` | `Data/Dialogue/ConversationData.cs` | ✅ JSON + legacy `speaker: text` parsing. |
 | `save/Save.hx` | `Save/*.cs` | 🟡 Scores, tallies, week completion, the options used by the port, atomic writes + backup. The chart/stage editor save properties are not ported. |
 | `input/Controls.hx` | `Input/Controls.cs` | 🟡 Keyboard + gamepad note binds, menu binds. Rebinding UI and `ControlsUtilities` are not ported. |
+| Asset delivery (submodule) | `Assets/*.cs` | ✅ First-run prompt, resumable zipball download from GitHub, archive→`assets/` mapping, raw-checkout fallback. |
 | `modding/` (Polymod) | `Modding/*.cs` | 🟡 Mod discovery, `_polymod_meta.json`, zipped mods, asset override order. HScript scripting is not ported. |
 | `Paths.hx` | `Paths/FunkinPaths.cs` | ✅ `images/`, `sounds/`, `music/`, `songs/<id>/Inst.ogg`, `Voices-*.ogg`, data enumeration, mod overlay. |
 
@@ -93,7 +94,7 @@ Anything above that is listed as 🟡 works, but with simplified visuals.
 ## Running
 
 ```bash
-# Prerequisites: .NET 8 SDK, and the assets submodule (git submodule update --init)
+# Prerequisites: .NET 8 SDK. Assets can be downloaded by the game on first launch.
 dotnet build FunkinCSharp.sln
 dotnet test tests/Funkin.Core.Tests/Funkin.Core.Tests.csproj
 dotnet run --project src/Funkin.Game
@@ -122,6 +123,50 @@ whole pipeline — data loading, countdown, dialogue, note spawning, botplay hit
 saving — is exercised without needing the art repository. It also means the port degrades gracefully:
 missing spritesheets become coloured placeholders instead of crashes.
 
+
+## First run: downloading the assets
+
+The art, charts and music live in a separate 3.7 GB repository
+([FunkinCrew/Funkin.assets](https://github.com/FunkinCrew/Funkin.assets)) so they are not shipped with
+the game. On first launch, when no usable `assets/` folder is found, the game asks:
+
+![Assets prompt](images/assets-prompt.png)
+
+Choosing **DOWNLOAD ASSETS** streams the repository zipball from GitHub (no `git` install needed),
+shows live progress, and unpacks it into `assets/` using the same layout `project.hxp` produces
+(`preload/*` is flattened to the root, everything else keeps its library folder):
+
+![Downloading assets](images/assets-downloading.png)
+
+Behaviour worth knowing:
+
+* **Resumable.** The archive is kept in `.asset-download/assets.zip`; if the download is cancelled or
+  the process dies, the next attempt continues with an HTTP range request instead of starting over.
+* **Anonymous and direct.** It fetches `https://codeload.github.com/FunkinCrew/Funkin.assets/zip/refs/heads/main`
+  — an ordinary HTTPS download, so proxies work.
+* **Safe extraction.** Archive entries are mapped onto `assets/` and anything attempting to escape
+  that folder is skipped; a corrupt archive is discarded automatically so the next try starts clean.
+* **Skippable.** You can play immediately with placeholders, and use **Options → Assets** to download
+  later (the same entry verifies an existing install).
+* **Overridable** for mirrors and CI:
+
+```bash
+Funkin --download-assets                       # no prompt, start right away
+Funkin --skip-asset-prompt                     # never ask; placeholders only
+Funkin --asset-url=https://example.com/assets.zip
+Funkin --asset-repo=somefork/Funkin.assets --asset-branch=dev
+```
+
+A raw clone of the asset repository also works as-is: if `assets/preload/` exists, the path resolver
+falls back to it, so `git clone https://github.com/FunkinCrew/Funkin.assets assets` needs no extra
+arrangement step.
+
+### Tests
+
+`tests/Funkin.Core.Tests/AssetDownloadTests.cs` covers the archive mapping, the layout detection,
+path-traversal rejection, network errors and cancellation, plus a resume test against an in-process
+HTTP server that issues `206 Partial Content` responses.
+
 ## Design notes / gotchas
 
 - **Song position** comes from `FlxSound.Time`, which is computed from submitted samples minus the
@@ -136,6 +181,14 @@ missing spritesheets become coloured placeholders instead of crashes.
 - **Save file** lives in `<game root>/saves/funkin-save.json` with a `.tmp` write and a backup copy.
 
 ## Changelog of the port
+
+### 0.10.2
+- **In-game asset installer:** first launch now offers to download the 3.7 GB asset repository,
+  with a progress bar, speed/ETA, cancellation and automatic resume. Available later from
+  **Options → Assets**, and configurable with `--download-assets`, `--asset-url`, `--asset-repo`
+  and `--asset-branch`.
+- The path resolver falls back to `assets/preload/`, so a raw clone of the assets repository works
+  without reorganising it.
 
 ### 0.10.1
 - Saved settings are applied at boot: master volume, mute, target framerate and window title.

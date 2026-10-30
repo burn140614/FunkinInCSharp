@@ -24,4 +24,4 @@ fi
 
 export SDL_AUDIODRIVER=dummy
 
-"$BINARY" --root="$(pwd)/build/test-assets" --smoke-song=test --smoke-timeout=90
+"$BINARY" --root="$(pwd)/build/test-assets" --skip-asset-prompt --smoke-song=test --smoke-timeout=90

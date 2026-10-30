@@ -1,3 +1,4 @@
+using Funkin.Assets;
 using Funkin.Flixel;
 using Funkin.Save;
 using Funkin.Util;
@@ -90,6 +91,12 @@ public sealed class OptionsState : MenuListState
             "Use a fixed scroll speed instead of the chart's.",
             () => $"Scroll Speed Override: {(Options.ScrollSpeedOverride ? $"{Options.ScrollSpeed:0.0}" : "OFF")}");
 
+        AddItem("Assets", OpenAssetDownloader,
+            "Download the game's artwork and music, or verify an existing install.",
+            () => AssetLayout.IsAssetsPresent(Paths.FunkinPaths.Instance.GameRoot)
+                ? "Assets: INSTALLED (press to check)"
+                : "Download Assets (~3.7 GB)");
+
         AddItem("Reset Save Data", ResetSave, "Delete all scores and restore default options.");
 
         AddItem("BACK", () => FlxG.SwitchState(_returnState?.Invoke() ?? new MainMenuState()), "Return to the previous screen.");
@@ -103,6 +110,12 @@ public sealed class OptionsState : MenuListState
         SaveManager.Instance.MarkDirty();
         SaveManager.Instance.Flush();
         RefreshLabels();
+    }
+
+    private void OpenAssetDownloader()
+    {
+        SaveManager.Instance.Flush();
+        FlxG.SwitchState(new AssetDownloadState());
     }
 
     private void ResetSave()

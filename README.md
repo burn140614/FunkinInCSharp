@@ -34,6 +34,17 @@ dotnet test tests/Funkin.Core.Tests/Funkin.Core.Tests.csproj
 dotnet run --project src/Funkin.Game
 ```
 
+On first launch the game notices that the art/music are missing and offers to download them from
+[FunkinCrew/Funkin.assets](https://github.com/FunkinCrew/Funkin.assets) (3.7 GB, resumable, no git
+required). You can also play immediately with placeholders and start the download later from
+**Options -> Assets**, or drive it from the command line:
+
+```bash
+Funkin --download-assets            # download without prompting
+Funkin --asset-url=<url>            # mirror / local test server
+Funkin --skip-asset-prompt          # never prompt; placeholders only
+```
+
 See [docs/PORTING.md](docs/PORTING.md) for the full feature-parity matrix (what is ported,
 what is simplified, and what is still missing), plus the headless smoke-test setup.
 

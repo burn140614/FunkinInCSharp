@@ -37,6 +37,28 @@ public sealed class FunkinPaths
     // Resolution
     // ---------------------------------------------------------------------
 
+    /// <summary>
+    /// Additional roots searched after `assets/`. This makes a raw checkout of the asset repository
+    /// usable as-is: `preload/` holds the default library and the other folders are libraries.
+    /// </summary>
+    private List<string> FallbackRoots()
+    {
+        var roots = new List<string>();
+
+        string preload = Path.Combine(AssetsRoot, "preload");
+        if (Directory.Exists(preload)) roots.Add(preload);
+
+        // A clone of Funkin.assets placed directly in the game root.
+        string rootPreload = Path.Combine(GameRoot, "preload");
+        if (Directory.Exists(rootPreload))
+        {
+            roots.Add(rootPreload);
+            roots.Add(GameRoot);
+        }
+
+        return roots;
+    }
+
     /// <summary>Resolves an asset path (relative to `assets/`) to an absolute path, or null when missing.</summary>
     public string? Resolve(string relativePath)
     {
@@ -47,6 +69,12 @@ public sealed class FunkinPaths
 
         var basePath = Path.Combine(AssetsRoot, relativePath);
         if (System.IO.File.Exists(basePath)) return basePath;
+
+        foreach (var fallback in FallbackRoots())
+        {
+            var candidate = Path.Combine(fallback, relativePath);
+            if (System.IO.File.Exists(candidate)) return candidate;
+        }
 
         if (Verbose) Logger.Debug($"Asset not found: {relativePath}");
         return null;

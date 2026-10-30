@@ -46,3 +46,5 @@ saves/
 build/test-assets/
 build/publish/
 build/release/
+build/README-PORT.txt
+.asset-download/

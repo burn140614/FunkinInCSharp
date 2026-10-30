@@ -6,9 +6,9 @@ namespace Funkin.Util;
 public static class Constants
 {
     public const string TITLE = "Friday Night Funkin'";
-    public const string VERSION = "0.10.1";
+    public const string VERSION = "0.10.2";
     public const string GENERATED_BY = "FunkinCSharp";
-    public const int BUILD_NUMBER = 104;
+    public const int BUILD_NUMBER = 105;
 
     public const string URL_ITCH = "https://ninja-muffin24.itch.io/funkin";
     public const string URL_NEWGROUNDS = "https://www.newgrounds.com/portal/view/770371";

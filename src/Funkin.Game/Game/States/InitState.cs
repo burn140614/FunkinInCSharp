@@ -1,3 +1,4 @@
+using Funkin.Assets;
 using Funkin.Data.Character;
 using Funkin.Data.Freeplay;
 using Funkin.Data.Song;
@@ -50,43 +51,66 @@ public sealed class InitState : FlxState
                 break;
 
             case 1:
+                _status.Text = "Checking assets...";
+                if (!AssetLayout.IsAssetsPresent(FunkinPaths.Instance.GameRoot))
+                {
+                    if (CommandLine.AutoDownloadAssets)
+                    {
+                        Logger.Info("Assets are missing; starting the download as requested.");
+                        CommandLine.SuppressAssetPrompt = true;
+                        FlxG.SwitchState(new AssetDownloadState());
+                        return;
+                    }
+
+                    if (!CommandLine.SuppressAssetPrompt)
+                    {
+                        Logger.Info("Assets are missing; asking the player whether to download them.");
+                        FlxG.SwitchState(new AssetsPromptState());
+                        return;
+                    }
+
+                    Logger.Warn("Running without game assets; placeholder art will be used.");
+                }
+                break;
+
+            case 2:
                 _status.Text = "Loading save data...";
                 SaveManager.Instance.Initialize(FunkinPaths.Instance.SaveRoot);
                 break;
 
-            case 2:
+            case 3:
                 _status.Text = "Loading mods...";
                 // Mods are loaded after the save so the player's enabled-mod list can be honoured.
                 Mods.Instance.ScanMods(FunkinPaths.Instance.ModsRoot, SaveManager.Instance.Data.EnabledModDirs);
                 break;
 
-            case 3:
+            case 4:
                 _status.Text = "Applying settings...";
                 ApplySettings();
                 break;
 
-            case 4:
+            case 5:
                 _status.Text = "Loading characters...";
                 CharacterRegistry.Instance.LoadAll();
                 break;
 
-            case 5:
+            case 6:
                 _status.Text = "Loading stages...";
                 StageRegistry.Instance.LoadAll();
                 break;
 
-            case 6:
+            case 7:
                 _status.Text = "Loading note kinds...";
                 Play.Notes.NoteKindManager.Instance.LoadAll();
                 break;
 
-            case 7:
+            case 8:
                 _status.Text = "Loading albums and weeks...";
                 AlbumRegistry.Instance.LoadAll();
                 LevelRegistry.Instance.LoadAll();
                 break;
 
-            case 8:
+            case 9:
                 _status.Text = "Loading songs...";
                 SongRegistry.Instance.LoadAll();
                 break;

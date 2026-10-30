@@ -1,3 +1,4 @@
+using Funkin.Assets;
 using Funkin.Util;
 
 namespace Funkin;
@@ -19,6 +20,34 @@ public static class CommandLine
     /// <summary>Abort with a failure exit code after this many seconds.</summary>
     public static float SmokeTimeout { get; private set; } = 120f;
 
+    /// <summary>Skip the "download assets?" prompt and run with placeholders.</summary>
+    public static bool SuppressAssetPrompt { get; set; }
+
+    /// <summary>Start the asset download immediately instead of asking.</summary>
+    public static bool AutoDownloadAssets { get; private set; }
+
+    /// <summary>Overrides the archive URL (mirrors/local tests).</summary>
+    public static string? AssetArchiveUrl { get; private set; }
+
+    /// <summary>Overrides the assets repository, as `owner/name`.</summary>
+    public static string? AssetRepo { get; private set; }
+
+    public static string AssetBranch { get; private set; } = "main";
+
+    /// <summary>Builds the asset source configured on the command line.</summary>
+    public static AssetSource BuildAssetSource()
+    {
+        if (!string.IsNullOrEmpty(AssetArchiveUrl)) return new AssetSource("local", "archive", AssetBranch, AssetArchiveUrl);
+
+        if (!string.IsNullOrEmpty(AssetRepo))
+        {
+            var parts = AssetRepo.Split('/', 2);
+            if (parts.Length == 2) return new AssetSource(parts[0], parts[1], AssetBranch);
+        }
+
+        return new AssetSource(AssetSource.Default.Owner, AssetSource.Default.Repo, AssetBranch);
+    }
+
     /// <summary>True when running an automated playthrough.</summary>
     public static bool IsSmokeTest => SmokeSong is not null;
 
@@ -37,6 +66,11 @@ public static class CommandLine
                   --smoke-song=<songId>    Boot straight into a song with Botplay enabled.
                   --smoke-difficulty=<d>   Difficulty for the automated playthrough.
                   --smoke-timeout=<secs>   Abort the automated playthrough after N seconds.
+                  --download-assets        Download the game's assets without prompting.
+                  --skip-asset-prompt      Never ask for the assets; use placeholders.
+                  --asset-url=<url>        Download assets from a custom archive URL.
+                  --asset-repo=<owner/name> Asset repository to download from.
+                  --asset-branch=<branch>  Branch of the asset repository (default: main).
                   --verbose                Enable debug logging.
                   --help, -h               Show this message.
                   --version                Print the version and exit.
@@ -75,6 +109,26 @@ public static class CommandLine
 
                 case "smoke-timeout" or "timeout":
                     if (float.TryParse(value, out var timeout)) SmokeTimeout = timeout;
+                    break;
+
+                case "download-assets":
+                    AutoDownloadAssets = true;
+                    break;
+
+                case "skip-asset-prompt" or "no-asset-prompt":
+                    SuppressAssetPrompt = true;
+                    break;
+
+                case "asset-url":
+                    AssetArchiveUrl = value;
+                    break;
+
+                case "asset-repo":
+                    AssetRepo = value;
+                    break;
+
+                case "asset-branch":
+                    AssetBranch = value ?? "main";
                     break;
 
                 case "verbose":
