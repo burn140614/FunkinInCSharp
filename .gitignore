@@ -45,3 +45,4 @@ saves/
 .build-cache/
 build/test-assets/
 build/publish/
+build/release/

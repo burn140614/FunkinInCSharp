@@ -10,7 +10,7 @@ cd "$(dirname "$0")/../.."
 export DOTNET_ROOT="${DOTNET_ROOT:-$HOME/.dotnet}"
 export PATH="$DOTNET_ROOT:$PATH"
 
-dotnet build src/Funkin.Game/Funkin.Game.csproj -c Release
+dotnet build src/Funkin.Game/Funkin.Game.csproj -c Release --no-incremental
 
 BINARY="src/Funkin.Game/bin/Release/net8.0/linux-x64/Funkin"
 
