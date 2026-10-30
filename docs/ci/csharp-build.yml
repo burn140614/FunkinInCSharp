@@ -1,0 +1,74 @@
+# CI definition for the C# port.
+#
+# This file is stored outside `.github/workflows/` because the automation token used to publish
+# this branch is not allowed to modify workflow files. To enable it, copy it to
+# `.github/workflows/csharp-build.yml` (the same layout the rest of the repository uses).
+
+name: Build and test the C# port
+
+on:
+  push:
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'scripts/csharp/**'
+      - 'FunkinCSharp.sln'
+      - 'Directory.Build.props'
+      - '.github/workflows/csharp-build.yml'
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'scripts/csharp/**'
+      - 'FunkinCSharp.sln'
+      - 'Directory.Build.props'
+      - '.github/workflows/csharp-build.yml'
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    name: Build, unit test, and smoke test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Install Linux graphics dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb libgl1-mesa-dri libopenal1 libasound2t64 || \
+          sudo apt-get install -y xvfb libgl1-mesa-dri libopenal1 libasound2
+
+      - name: Restore
+        run: dotnet restore FunkinCSharp.sln
+
+      - name: Build
+        run: dotnet build FunkinCSharp.sln --configuration Release --no-restore
+
+      - name: Run unit tests
+        run: dotnet test tests/Funkin.Core.Tests/Funkin.Core.Tests.csproj --configuration Release --no-build --logger "trx;LogFileName=test-results.trx"
+
+      - name: Run gameplay smoke test (Linux)
+        if: runner.os == 'Linux'
+        run: ./scripts/csharp/smoke-test.sh
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.os }}
+          path: '**/test-results.trx'
+          if-no-files-found: ignore

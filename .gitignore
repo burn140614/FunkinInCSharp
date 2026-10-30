@@ -35,3 +35,13 @@ node_modules/
 package.json
 package-lock.json
 .aider*
+
+# --- C# port ---
+bin/
+obj/
+*.user
+*.suo
+saves/
+.build-cache/
+build/test-assets/
+build/publish/
