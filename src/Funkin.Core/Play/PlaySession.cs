@@ -306,6 +306,28 @@ public sealed class PlaySession
     /// <summary>Hits a note immediately, judging it against the current song position.</summary>
     public NoteHitEventArgs HitNote(PlayNote note, double songPosition)
     {
+        var kind = note.Data.Kind is null ? null : NoteKindLookup.Get(note.Data.Kind);
+
+        // Mines are hit on purpose: they damage the player and never score.
+        if (kind?.IsMine == true)
+        {
+            note.Hit = true;
+            note.Judgement = "mine";
+            Combo = 0;
+            Tallies.Missed++;
+            ModifyHealth(Constants.HEALTH_MINE_PENALTY);
+            OnNoteMiss?.Invoke(this, new NoteMissEventArgs { Note = note, IsPlayer = true, IsGhostMiss = false });
+
+            return new NoteHitEventArgs
+            {
+                Note = note,
+                Judgement = "mine",
+                TimingOffset = (float)(songPosition - note.Time),
+                ScoreAwarded = 0,
+                IsPlayer = true,
+            };
+        }
+
         float offset = (float)(songPosition - note.Time);
         string judgement = Scoring.JudgeNote(offset, Options.ScoringSystem);
         int score = Scoring.ScoreNote(offset, Options.ScoringSystem);
@@ -333,9 +355,18 @@ public sealed class PlaySession
 
         Combo++;
         if (Combo > MaxCombo) MaxCombo = Combo;
+
+        // Custom note kinds can add score and alter how much health a hit grants.
+        if (kind is not null)
+        {
+            score += kind.ScoreBonus;
+            note.ScoreAwarded = score;
+        }
+
         Score += score;
         Tallies.RegisterHit(judgement, Combo);
         Health += GetHealthBonus(judgement);
+        if (kind is not null) Health += kind.HealthGain - GetHealthBonus(judgement);
         ClampHealth();
 
         var args = new NoteHitEventArgs
@@ -420,7 +451,9 @@ public sealed class PlaySession
     {
         Combo = 0;
         Tallies.Missed++;
-        Health += Constants.HEALTH_MISS_PENALTY;
+
+        var kind = note.Data.Kind is null ? null : NoteKindLookup.Get(note.Data.Kind);
+        Health += kind is null ? Constants.HEALTH_MISS_PENALTY : -kind.HealthLoss;
         ClampHealth();
 
         OnNoteMiss?.Invoke(this, new NoteMissEventArgs

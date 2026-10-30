@@ -212,3 +212,79 @@ public class PlaySessionHoldTests
         Assert.True(ended);
     }
 }
+
+public class PlaySessionNoteKindTests : IDisposable
+{
+    private readonly string _root;
+
+    public PlaySessionNoteKindTests()
+    {
+        _root = Path.Combine(Path.GetTempPath(), "notekinds-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(Path.Combine(_root, "assets", "data", "notekinds"));
+
+        File.WriteAllText(Path.Combine(_root, "assets", "data", "notekinds", "mine.json"),
+            """{ "description": "Mine", "isMine": true, "noHit": false }""");
+
+        File.WriteAllText(Path.Combine(_root, "assets", "data", "notekinds", "bonus.json"),
+            """{ "description": "Bonus note", "scoreBonus": 250, "healthGain": 0.1 }""");
+
+        Paths.FunkinPaths.Initialize(_root);
+        Play.Notes.NoteKindManager.Instance.LoadAll();
+    }
+
+    public void Dispose()
+    {
+        if (Directory.Exists(_root)) Directory.Delete(_root, true);
+    }
+
+    private static PlaySession BuildSession(params Funkin.Data.Song.SongNoteData[] notes)
+    {
+        var chart = new Funkin.Data.Song.SongChartData();
+        chart.Notes["normal"] = notes.ToList();
+        chart.ScrollSpeed["normal"] = 1f;
+
+        var metadata = new Funkin.Data.Song.SongMetadata("test", "tester")
+        {
+            TimeChanges = { new Funkin.Data.Song.SongTimeChange(0, 120f, 0) },
+        };
+        metadata.PlayData.Difficulties.Add("normal");
+
+        var difficulty = new Funkin.Data.Song.SongDifficulty(new Funkin.Data.Song.Song("test"), "normal", "default", metadata, chart);
+        return new PlaySession(difficulty, new PlaySessionOptions { GhostTapping = true });
+    }
+
+    [Fact]
+    public void MinesDamageThePlayerAndResetCombo()
+    {
+        var session = BuildSession(
+            new Funkin.Data.Song.SongNoteData(1000, 0),
+            new Funkin.Data.Song.SongNoteData(1500, 0, 0, "mine"));
+
+        // Register a hit first so the combo is non-zero.
+        session.Update(1000);
+        session.PressLane(0);
+        session.Update(1000);
+        Assert.True(session.Combo == 1, $"combo={session.Combo} score={session.Score} sick={session.Tallies.Sick} missed={session.Tallies.Missed} h0={session.Notes[0].Hit} j0={session.Notes[0].Judgement} j1={session.Notes[1].Judgement} health={session.Health}");
+
+        session.Update(1500);
+        session.PressLane(0);
+        session.Update(1500);
+
+        Assert.Equal(0, session.Combo);
+        Assert.Equal("mine", session.Notes[1].Judgement);
+        Assert.True(session.Health < Funkin.Util.Constants.HEALTH_STARTING);
+        Assert.Equal(1, session.Tallies.Missed);
+    }
+
+    [Fact]
+    public void CustomKindScoreBonusIsApplied()
+    {
+        var session = BuildSession(new Funkin.Data.Song.SongNoteData(1000, 0, 0, "bonus"));
+        session.Update(1000);
+        session.PressLane(0);
+        session.Update(1000);
+
+        Assert.Equal(Play.Scoring.Pbot1MaxScore + 250, session.Score);
+        Assert.True(session.Health > Funkin.Util.Constants.HEALTH_STARTING);
+    }
+}

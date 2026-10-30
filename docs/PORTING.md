@@ -10,7 +10,7 @@ Both games live side by side in this repository:
 | `source/` | The original Haxe/HaxeFlixel game (unchanged; kept as the reference implementation). |
 | `src/Funkin.Core/` | Engine-independent game logic: charts, Conductor, scoring, save data, registries. |
 | `src/Funkin.Game/` | The MonoGame front-end: Flixel-style display layer, audio, states, gameplay view. |
-| `tests/Funkin.Core.Tests/` | xUnit tests for the ported logic (41 tests). |
+| `tests/Funkin.Core.Tests/` | xUnit tests for the ported logic (43 tests). |
 
 ## Why this architecture
 
@@ -37,7 +37,7 @@ Legend: ✅ ported · 🟡 partial / simplified · ❌ not ported yet
 | --- | --- | --- |
 | `Conductor.hx` | `Play/Conductor.cs` | ✅ BPM/time-signature changes, step/beat/measure signals, time↔step conversions, offsets, `forceBPM`. |
 | `play/scoring/Scoring.hx` | `Play/Scoring.cs` | ✅ PBOT1 / Week 7 / Legacy windows, sigmoid scoring, tallies, ranks. |
-| `play/notes/NoteKind.hx` | `Play/Notes/NoteKind.cs` | ✅ Data-driven note kinds (`alt-animation` built in). |
+| `play/notes/NoteKind.hx` | `Play/Notes/NoteKind.cs` | ✅ Data-driven note kinds (`alt-animation` built in), mines, per-kind score/health modifiers. |
 | `data/song/SongData.hx` | `Data/Song/*.cs` | ✅ Metadata, chart, notes (`t/d/l/k/p`), events (`t/e/v`), scroll speeds, time formats. |
 | `data/character/CharacterData.hx` | `Data/Character/*.cs` | ✅ Animation data, offsets, scales, health icon and death data, registry with mod support. |
 | `data/stage/StageData.hx` | `Data/Stage/*.cs` | ✅ Props (including colour props), character placements, parallax scroll factors, camera zoom. |
@@ -112,6 +112,10 @@ The port can play a whole song without a human, which is what CI runs:
 python3 scripts/csharp/make-test-assets.py build/test-assets
 dotnet run --project src/Funkin.Game -- --root="$(pwd)/build/test-assets" --smoke-song=test --smoke-timeout=90
 ```
+
+The headless smoke test (`scripts/csharp/smoke-test.sh`) is what CI runs on every push; the workflow
+definition lives in `docs/ci/csharp-build.yml` (copy it to `.github/workflows/` to enable it in your
+own fork, since the automation token used here cannot write workflow files).
 
 `make-test-assets.py` writes a tiny synthetic song (chart, dialogue, characters, stage, week) so the
 whole pipeline — data loading, countdown, dialogue, note spawning, botplay hits, scoring, results and

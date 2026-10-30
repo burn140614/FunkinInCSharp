@@ -39,16 +39,8 @@ public sealed class GameOverState : MenuListState
         }, "Give up and go back.");
 
         BuildMenuTexts();
+        FlxG.Sound.PlaySfx(Funkin.Paths.FunkinPaths.Instance.Sound("gameOver"));
     }
 
-    public override void Update(float elapsed)
-    {
-        base.Update(elapsed);
-
-        // Enter alone retries, matching the original's "press enter to retry".
-        if (FlxG.Input.JustPressed(Microsoft.Xna.Framework.Input.Keys.Enter))
-        {
-            Cursor = 0;
-        }
-    }
+    // Enter retries and Escape quits, both handled by the base menu state.
 }
