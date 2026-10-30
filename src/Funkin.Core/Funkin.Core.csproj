@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Funkin</RootNamespace>
+    <AssemblyName>Funkin.Core</AssemblyName>
+  </PropertyGroup>
+</Project>

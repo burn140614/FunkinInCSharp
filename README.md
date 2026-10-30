@@ -20,6 +20,23 @@ This game was made with love to Newgrounds and its community. Extra love to Tom 
 </table>
 </div>
 
+# C# Port
+
+This repository also contains a C# port of the game built on MonoGame, in `src/`:
+
+- `src/Funkin.Core` - engine-independent game logic (charts, Conductor, scoring, save data, registries).
+- `src/Funkin.Game` - the MonoGame front-end (Flixel-style display layer, OGG audio, menus, gameplay).
+- `tests/Funkin.Core.Tests` - xUnit tests covering the ported logic.
+
+```bash
+dotnet build FunkinCSharp.sln
+dotnet test tests/Funkin.Core.Tests/Funkin.Core.Tests.csproj
+dotnet run --project src/Funkin.Game
+```
+
+See [docs/PORTING.md](docs/PORTING.md) for the full feature-parity matrix (what is ported,
+what is simplified, and what is still missing), plus the headless smoke-test setup.
+
 # Getting Started
 
 **PLEASE USE THE LINKS ABOVE IF YOU JUST WANT TO PLAY THE GAME**
