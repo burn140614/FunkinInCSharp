@@ -41,7 +41,7 @@ public sealed class ConversationState : FlxState
     /// Returns a state that plays the song's dialogue first when one exists, otherwise the PlayState
     /// itself. Keeps the call sites (`new PlayState(...)`) simple.
     /// </summary>
-    public static FlxState CreateForSong(string songId, string difficulty, string weekId = null!, int weekSongIndex = 0)
+    public static FlxState CreateForSong(string songId, string difficulty, string? weekId = null, int weekSongIndex = 0)
     {
         var playState = new PlayState(songId, difficulty)
         {
